@@ -2,9 +2,45 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Laravel\Sanctum\HasApiTokens;
 
-class User extends Model
+class User extends Authenticatable
 {
-    //
+    use HasApiTokens, Notifiable;
+
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'role',
+        'branch_id',
+        'department',
+        'designation',
+        'employment_status',
+        'date_of_joining',
+        'shift_id',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'date_of_joining' => 'date',
+        'password' => 'hashed',
+    ];
+
+    public const ROLE_ADMIN = 'Admin';
+    public const ROLE_HR_MANAGER = 'HR Manager';
+    public const ROLE_BRANCH_MANAGER = 'Branch Manager';
+    public const ROLE_EMPLOYEE = 'Employee';
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
 }
