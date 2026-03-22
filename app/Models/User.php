@@ -6,7 +6,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\Shift;
+//use App\Models\Shift;
+use App\Models\EmployeeRosterAssignment;
 
 class User extends Authenticatable
 {
@@ -22,7 +23,6 @@ class User extends Authenticatable
         'designation',
         'employment_status',
         'date_of_joining',
-        'shift_id',
     ];
 
     protected $hidden = [
@@ -43,6 +43,15 @@ class User extends Authenticatable
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
-        return $this->belongsTo(Shift::class);
+    }
+
+    public function rosterAssignments()
+    {
+        return $this->hasMany(EmployeeRosterAssignment::class, 'user_id');
+    }
+
+    public function assignedRosterRecords()
+    {
+        return $this->hasMany(EmployeeRosterAssignment::class, 'assigned_by');
     }
 }

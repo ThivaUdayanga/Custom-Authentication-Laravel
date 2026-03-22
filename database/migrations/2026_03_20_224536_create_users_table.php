@@ -36,7 +36,7 @@ return new class extends Migration
             ])->default('Active');
 
             $table->date('date_of_joining')->nullable();
-            $table->unsignedBigInteger('shift_id')->nullable()->constrained('shifts')->nullOnDelete();;
+            //$table->unsignedBigInteger('shift_id')->nullable()->constrained('shifts')->nullOnDelete();;
 
             $table->rememberToken();
             $table->timestamps();

@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\ShiftController;
+use App\Http\Controllers\Api\RosterController;
+use App\Http\Controllers\Api\EmployeeRosterAssignmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,4 +77,38 @@ Route::middleware(['auth:sanctum', 'role:Admin,HR Manager'])->group(function () 
     Route::post('/shifts', [ShiftController::class, 'store']);
     Route::put('/shifts/{shift}', [ShiftController::class, 'update']);
     Route::delete('/shifts/{shift}', [ShiftController::class, 'destroy']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Roster Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/rosters', [RosterController::class, 'index']);
+    Route::get('/rosters/{roster}', [RosterController::class, 'show']);
+});
+
+Route::middleware(['auth:sanctum', 'role:Admin,HR Manager'])->group(function () {
+    Route::post('/rosters', [RosterController::class, 'store']);
+    Route::put('/rosters/{roster}', [RosterController::class, 'update']);
+    Route::delete('/rosters/{roster}', [RosterController::class, 'destroy']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Employee Roster Assignment Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/employee-roster-assignments', [EmployeeRosterAssignmentController::class, 'index']);
+    Route::get('/employee-roster-assignments/{employeeRosterAssignment}', [EmployeeRosterAssignmentController::class, 'show']);
+});
+
+Route::middleware(['auth:sanctum', 'role:Admin,HR Manager'])->group(function () {
+    Route::post('/employee-roster-assignments', [EmployeeRosterAssignmentController::class, 'store']);
+    Route::put('/employee-roster-assignments/{employeeRosterAssignment}', [EmployeeRosterAssignmentController::class, 'update']);
+    Route::delete('/employee-roster-assignments/{employeeRosterAssignment}', [EmployeeRosterAssignmentController::class, 'destroy']);
 });

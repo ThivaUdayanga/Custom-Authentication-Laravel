@@ -19,8 +19,13 @@ class Shift extends Model
         'is_active' => 'boolean',
     ];
 
-    public function users(): HasMany
+    // public function users(): HasMany
+    // {
+    //     return $this->hasMany(User::class);
+    // }
+
+    public function rosterItems()
     {
-        return $this->hasMany(User::class);
+        return $this->hasMany(RosterItem::class);
     }
 }
