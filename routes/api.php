@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\BranchController;
+use App\Http\Controllers\Api\ShiftController;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,11 +52,27 @@ Route::middleware(['auth:sanctum', 'role:Admin,HR Manager,Branch Manager'])->gro
     Route::get('/users/{user}', [UserController::class, 'show']);
 });
 
-Route::middleware(['auth:sanctum', 'role:Admin,HR Manager'])->group(function () {
+Route::middleware(['auth:sanctum', 'role:Admin,Branch Manager'])->group(function () {
     Route::post('/users', [UserController::class, 'store']);
     Route::put('/users/{user}', [UserController::class, 'update']);
 });
 
 Route::middleware(['auth:sanctum', 'role:Admin'])->group(function () {
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Shift Routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:sanctum', 'role:Admin,HR Manager,Branch Manager'])->group(function () {
+    Route::get('/shifts', [ShiftController::class, 'index']);
+    Route::get('/shifts/{shift}', [ShiftController::class, 'show']);
+});
+
+Route::middleware(['auth:sanctum', 'role:Admin,HR Manager'])->group(function () {
+    Route::post('/shifts', [ShiftController::class, 'store']);
+    Route::put('/shifts/{shift}', [ShiftController::class, 'update']);
+    Route::delete('/shifts/{shift}', [ShiftController::class, 'destroy']);
 });
