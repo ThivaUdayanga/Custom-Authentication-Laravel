@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\RosterController;
 use App\Http\Controllers\Api\EmployeeRosterAssignmentController;
+use App\Http\Controllers\Api\AttendanceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -111,4 +112,18 @@ Route::middleware(['auth:sanctum', 'role:Admin,HR Manager'])->group(function () 
     Route::post('/employee-roster-assignments', [EmployeeRosterAssignmentController::class, 'store']);
     Route::put('/employee-roster-assignments/{employeeRosterAssignment}', [EmployeeRosterAssignmentController::class, 'update']);
     Route::delete('/employee-roster-assignments/{employeeRosterAssignment}', [EmployeeRosterAssignmentController::class, 'destroy']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Mark Attendance Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth:sanctum', 'role:Admin,HR Manager,Branch Manager')->group(function () {
+    Route::get('/getAttendanceRecords', [AttendanceController::class, 'getAttendanceRecords']);
+});
+
+Route::middleware(['auth:sanctum', 'role:Branch Manager,HR Manager, Employee'])->group(function () {
+    Route::post('/mark-attendance', [AttendanceController::class, 'markAttendance']);
 });

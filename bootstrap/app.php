@@ -20,6 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'islogedin' => IsLogedIn::class,
             'role' => RoleMiddleware::class,
         ]);
+        
+        $middleware->api(prepend: [
+            \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
+        
         // //temporary for csrf token verification, will be removed later
         // $middleware->validateCsrfTokens(except: [
         //     'api/auth/login',
