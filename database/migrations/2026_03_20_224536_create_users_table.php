@@ -26,7 +26,6 @@ return new class extends Migration
             $table->foreignId('branch_id')->nullable()->constrained('branches')->nullOnDelete();
 
             $table->string('department')->nullable();
-            $table->string('designation')->nullable();
 
             $table->enum('employment_status', [
                 'Active',
@@ -36,7 +35,6 @@ return new class extends Migration
             ])->default('Active');
 
             $table->date('date_of_joining')->nullable();
-            //$table->unsignedBigInteger('shift_id')->nullable()->constrained('shifts')->nullOnDelete();;
 
             $table->rememberToken();
             $table->timestamps();

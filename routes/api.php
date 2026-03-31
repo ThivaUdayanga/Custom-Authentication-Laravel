@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\RosterController;
 use App\Http\Controllers\Api\EmployeeRosterAssignmentController;
 use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\LeaveController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,7 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/branches/{branch}', [BranchController::class, 'show']);
 });
 
-Route::middleware(['auth:sanctum', 'role:Admin'])->group(function () {
+Route::middleware(['auth:sanctum', 'role:Admin'])->group(function(){
     Route::post('/branches', [BranchController::class, 'store']);
     Route::put('/branches/{branch}', [BranchController::class, 'update']);
     Route::delete('/branches/{branch}', [BranchController::class, 'destroy']);
@@ -53,9 +54,6 @@ Route::middleware(['auth:sanctum', 'role:Admin'])->group(function () {
 Route::middleware(['auth:sanctum', 'role:Admin,HR Manager,Branch Manager'])->group(function () {
     Route::get('/users', [UserController::class, 'index']);
     Route::get('/users/{user}', [UserController::class, 'show']);
-});
-
-Route::middleware(['auth:sanctum', 'role:Admin,Branch Manager'])->group(function () {
     Route::post('/users', [UserController::class, 'store']);
     Route::put('/users/{user}', [UserController::class, 'update']);
 });
@@ -97,6 +95,8 @@ Route::middleware(['auth:sanctum', 'role:Admin,HR Manager'])->group(function () 
     Route::delete('/rosters/{roster}', [RosterController::class, 'destroy']);
 });
 
+//to be implement
+
 /*
 |--------------------------------------------------------------------------
 | Employee Roster Assignment Routes
@@ -126,4 +126,28 @@ Route::middleware('auth:sanctum', 'role:Admin,HR Manager,Branch Manager')->group
 
 Route::middleware(['auth:sanctum', 'role:Branch Manager,HR Manager, Employee'])->group(function () {
     Route::post('/mark-attendance', [AttendanceController::class, 'markAttendance']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Leave Management Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/leaves', [LeaveController::class, 'index']);
+    Route::get('/leaves/{leave}', [LeaveController::class, 'show']);
+    Route::get('/users/{userId}/leaves', [LeaveController::class, 'getEmployeeLeaves']);
+});
+
+Route::middleware(['auth:sanctum', 'role:Employee,HR Manager,Branch Manager'])->group(function () {
+    Route::post('/leaves', [LeaveController::class, 'store']);
+});
+
+Route::middleware(['auth:sanctum', 'role:Admin,HR Manager,Branch Manager'])->group(function () {
+    Route::patch('/leaves/{leave}/status', [LeaveController::class, 'updateStatus']);
+});
+
+Route::middleware(['auth:sanctum', 'role:Employee,HR Manager'])->group(function () {
+    Route::delete('/leaves/{leave}', [LeaveController::class, 'destroy']);
 });

@@ -14,12 +14,11 @@ class UserSeeder extends Seeder
 
         User::create([
             'name' => 'System Admin',
-            'email' => 'admin@hrms.com',
-            'password' => 'admin1234',
+            'email' => 'admin@gmail.com',
+            'password' => '12345678',
             'role' => User::ROLE_ADMIN,
             'branch_id' => $branch?->id,
             'department' => 'Administration',
-            'designation' => 'Administrator',
             'employment_status' => 'Active',
             'date_of_joining' => now()->toDateString(),
         ]);

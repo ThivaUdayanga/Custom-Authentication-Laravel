@@ -9,9 +9,15 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('branch')->latest()->get();
+        $query = User::with('branch');
+
+        if ($request->has('email')) {
+            $query->where('email', $request->input('email'));
+        }
+
+        $users = $query->latest()->get();
 
         return response()->json([
             'success' => true,
@@ -33,8 +39,8 @@ class UserController extends Controller
                 User::ROLE_EMPLOYEE,
             ])],
             'branchId' => ['required', 'exists:branches,id'],
-            'department' => ['required', 'string', 'max:255'],
-            'designation' => ['required', 'string', 'max:255'],
+            'department' => ['nullable', 'string', 'max:255'],
+            'designation' => ['nullable', 'string', 'max:255'],
             'employmentStatus' => ['required', Rule::in(['Active', 'On Leave', 'Resigned', 'Terminated'])],
             'dateOfJoining' => ['required', 'date'],
             'shiftId' => ['nullable'],
@@ -46,8 +52,8 @@ class UserController extends Controller
             'password' => $validated['password'],
             'role' => $validated['role'],
             'branch_id' => $validated['branchId'],
-            'department' => $validated['department'],
-            'designation' => $validated['designation'],
+            'department' => $validated['department'] ?? null,
+            'designation' => $validated['designation'] ?? null,
             'employment_status' => $validated['employmentStatus'],
             'date_of_joining' => $validated['dateOfJoining'],
             'shift_id' => $validated['shiftId'] ?? null,
@@ -82,11 +88,11 @@ class UserController extends Controller
                 User::ROLE_EMPLOYEE,
             ])],
             'branchId' => ['sometimes', 'required', 'exists:branches,id'],
-            'department' => ['sometimes', 'required', 'string', 'max:255'],
-            'designation' => ['sometimes', 'required', 'string', 'max:255'],
+            // 'department' => ['sometimes', 'nullable', 'string', 'max:255'],
+            // 'designation' => ['sometimes', 'nullable', 'string', 'max:255'],
             'employmentStatus' => ['sometimes', 'required', Rule::in(['Active', 'On Leave', 'Resigned', 'Terminated'])],
             'dateOfJoining' => ['sometimes', 'required', 'date'],
-            'shiftId' => ['nullable'],
+            // 'shiftId' => ['nullable'],
         ]);
 
         $data = [];
@@ -96,11 +102,11 @@ class UserController extends Controller
         if (!empty($validated['password'])) $data['password'] = $validated['password'];
         if (array_key_exists('role', $validated)) $data['role'] = $validated['role'];
         if (array_key_exists('branchId', $validated)) $data['branch_id'] = $validated['branchId'];
-        if (array_key_exists('department', $validated)) $data['department'] = $validated['department'];
-        if (array_key_exists('designation', $validated)) $data['designation'] = $validated['designation'];
+        // if (array_key_exists('department', $validated)) $data['department'] = $validated['department'];
+        // if (array_key_exists('designation', $validated)) $data['designation'] = $validated['designation'];
         if (array_key_exists('employmentStatus', $validated)) $data['employment_status'] = $validated['employmentStatus'];
         if (array_key_exists('dateOfJoining', $validated)) $data['date_of_joining'] = $validated['dateOfJoining'];
-        if (array_key_exists('shiftId', $validated)) $data['shift_id'] = $validated['shiftId'];
+        // if (array_key_exists('shiftId', $validated)) $data['shift_id'] = $validated['shiftId'];
 
         $user->update($data);
 

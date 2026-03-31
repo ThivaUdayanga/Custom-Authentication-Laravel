@@ -58,10 +58,14 @@ class EmployeeRosterAssignmentController extends Controller
         $employee = User::findOrFail($validated['userId']);
         $roster = Roster::with('branch')->findOrFail($validated['rosterId']);
 
-        if ($employee->role !== User::ROLE_EMPLOYEE) {
+        if (!in_array($employee->role, [
+            User::ROLE_EMPLOYEE,
+            User::ROLE_BRANCH_MANAGER,
+            User::ROLE_HR_MANAGER
+        ])) {
             return response()->json([
                 'success' => false,
-                'message' => 'Roster can only be assigned to users with Employee role',
+                'message' => 'Roster can only be assigned to users with Employee, Branch Manager, or HR Manager role',
             ], 422);
         }
 

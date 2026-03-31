@@ -6,23 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->foreign('shift_id')->references('id')->on('shifts')->nullOnDelete();
+            $table->integer('leave_balance')->default(20)->after('date_of_joining');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['shift_id']);
+            $table->dropColumn('leave_balance');
         });
     }
 };

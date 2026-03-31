@@ -19,6 +19,8 @@ class ShiftController extends Controller
                 'endTime' => \Carbon\Carbon::parse($shift->end_time)->format('H:i'),
                 'description' => $shift->description,
                 'isActive' => $shift->is_active,
+                'breakDurationMinutes' => $shift->break_duration_minutes,
+                // 'overtimeRate' => $shift->overtime_rate,
                 'createdAt' => $shift->created_at,
                 'updatedAt' => $shift->updated_at,
             ];
@@ -39,6 +41,8 @@ class ShiftController extends Controller
             'endTime' => ['required', 'date_format:H:i'],
             'description' => ['nullable', 'string'],
             'isActive' => ['nullable', 'boolean'],
+            'breakDurationMinutes' => ['nullable', 'integer', 'min:0'],
+            // 'overtimeRate' => ['nullable', 'numeric', 'min:1'],
         ]);
 
         $shift = Shift::create([
@@ -47,6 +51,8 @@ class ShiftController extends Controller
             'end_time' => $validated['endTime'],
             'description' => $validated['description'] ?? null,
             'is_active' => $validated['isActive'] ?? true,
+            'break_duration_minutes' => $validated['breakDurationMinutes'] ?? null,
+            // 'overtime_rate' => $validated['overtimeRate'] ?? null,
         ]);
 
         return response()->json([
@@ -59,6 +65,8 @@ class ShiftController extends Controller
                 'endTime' => \Carbon\Carbon::parse($shift->end_time)->format('H:i'),
                 'description' => $shift->description,
                 'isActive' => $shift->is_active,
+                'breakDurationMinutes' => $validated['breakDurationMinutes'] ?? null,
+                // 'overtimeRate' => $validated['overtimeRate'] ?? null,
             ],
         ], 201);
     }
@@ -75,6 +83,8 @@ class ShiftController extends Controller
                 'endTime' => \Carbon\Carbon::parse($shift->end_time)->format('H:i'),
                 'description' => $shift->description,
                 'isActive' => $shift->is_active,
+                'breakDurationMinutes' => $shift->break_duration_minutes,
+                // 'overtimeRate' => $shift->overtime_rate,
             ],
         ]);
     }
@@ -87,6 +97,8 @@ class ShiftController extends Controller
             'endTime' => ['required', 'date_format:H:i'],
             'description' => ['nullable', 'string'],
             'isActive' => ['nullable', 'boolean'],
+            'breakDurationMinutes' => ['nullable', 'integer', 'min:0'],
+            // 'overtimeRate' => ['nullable', 'numeric', 'min:1'],
         ]);
 
         $shift->update([
@@ -95,6 +107,8 @@ class ShiftController extends Controller
             'end_time' => $validated['endTime'],
             'description' => $validated['description'] ?? null,
             'is_active' => $validated['isActive'] ?? $shift->is_active,
+            'break_duration_minutes' => $validated['breakDurationMinutes'] ?? null,
+            // 'overtime_rate' => $validated['overtimeRate'] ?? null,
         ]);
 
         return response()->json([
@@ -107,6 +121,8 @@ class ShiftController extends Controller
                 'endTime' => \Carbon\Carbon::parse($shift->end_time)->format('H:i'),
                 'description' => $shift->description,
                 'isActive' => $shift->is_active,
+                'breakDurationMinutes' => $validated['breakDurationMinutes'] ?? null,
+                // 'overtimeRate' => $validated['overtimeRate'] ?? null,
             ],
         ]);
     }

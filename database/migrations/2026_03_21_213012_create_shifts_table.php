@@ -18,6 +18,8 @@ return new class extends Migration
             $table->time('end_time');
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->integer('break_duration_minutes')->nullable();
+            // $table->decimal('overtime_rate', 8, 2)->nullable();
             $table->timestamps();
         });
     }

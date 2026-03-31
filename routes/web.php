@@ -3,9 +3,9 @@
 use Illuminate\Support\Facades\Route;
 //use App\Http\Controllers\CustomAuthController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::get('/', function () {
+//     return view('welcome');
+// });
 
 // Route::middleware(['islogedin'])->group(function () {
 //     Route::get('/login', [CustomAuthController::class, 'login'])->name('login');

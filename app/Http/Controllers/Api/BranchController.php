@@ -27,6 +27,7 @@ class BranchController extends Controller
             'location' => ['required', 'string', 'min:3', 'max:255'],
             'workingHours' => ['nullable', 'string', 'max:255'],
             'timeZone' => ['nullable', 'string', 'max:255'],
+            'is_active' => ['nullable', 'boolean'],
         ]);
 
         $branch = Branch::create([
@@ -34,6 +35,7 @@ class BranchController extends Controller
             'location' => $validated['location'],
             'working_hours' => $validated['workingHours'] ?? null,
             'time_zone' => $validated['timeZone'] ?? null,
+            'is_active' => $validated['is_active'] ?? true,
         ]);
 
         return response()->json([

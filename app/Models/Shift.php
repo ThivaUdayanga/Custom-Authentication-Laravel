@@ -13,10 +13,14 @@ class Shift extends Model
         'end_time',
         'description',
         'is_active',
+        'break_duration_minutes',
+        // 'overtime_rate',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'break_duration_minutes' => 'integer',
+        // 'overtime_rate' => 'decimal:2',
     ];
 
     // public function users(): HasMany

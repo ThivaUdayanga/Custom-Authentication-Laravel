@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Laravel\Sanctum\HasApiTokens;
 //use App\Models\Shift;
 use App\Models\EmployeeRosterAssignment;
+use App\Models\Leave;
 
 class User extends Authenticatable
 {
@@ -20,9 +21,10 @@ class User extends Authenticatable
         'role',
         'branch_id',
         'department',
-        'designation',
+        //'designation',
         'employment_status',
         'date_of_joining',
+        'leave_balance',
     ];
 
     protected $hidden = [
@@ -53,5 +55,15 @@ class User extends Authenticatable
     public function assignedRosterRecords()
     {
         return $this->hasMany(EmployeeRosterAssignment::class, 'assigned_by');
+    }
+
+    public function leaves()
+    {
+        return $this->hasMany(Leave::class);
+    }
+
+    public function approvedLeaves()
+    {
+        return $this->hasMany(Leave::class, 'approved_by');
     }
 }
