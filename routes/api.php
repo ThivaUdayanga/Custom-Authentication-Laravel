@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\RosterController;
 use App\Http\Controllers\Api\EmployeeRosterAssignmentController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\LeaveController;
+use App\Http\Controllers\Api\LeaveCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -150,4 +151,22 @@ Route::middleware(['auth:sanctum', 'role:Admin,HR Manager,Branch Manager'])->gro
 
 Route::middleware(['auth:sanctum', 'role:Employee,HR Manager'])->group(function () {
     Route::delete('/leaves/{leave}', [LeaveController::class, 'destroy']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Leave Category Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/leave-categories', [LeaveCategoryController::class, 'index']);
+    Route::get('/leave-categories/applicable', [LeaveCategoryController::class, 'getApplicableCategories']);
+    Route::get('/leave-categories/{leaveCategory}', [LeaveCategoryController::class, 'show']);
+});
+
+Route::middleware(['auth:sanctum', 'role:Admin,Branch Manager'])->group(function () {
+    Route::post('/leave-categories', [LeaveCategoryController::class, 'store']);
+    Route::put('/leave-categories/{leaveCategory}', [LeaveCategoryController::class, 'update']);
+    Route::delete('/leave-categories/{leaveCategory}', [LeaveCategoryController::class, 'destroy']);
 });

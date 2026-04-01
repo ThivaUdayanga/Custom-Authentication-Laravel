@@ -22,4 +22,17 @@ class RosterItem extends Model
     {
         return $this->belongsTo(Shift::class);
     }
+
+    public function toArray()
+    {
+        $array = parent::toArray();
+        
+        $array['rosterId'] = $this->roster_id;
+        $array['shiftId'] = $this->shift_id;
+        $array['dayOrder'] = $this->day_order;
+        
+        unset($array['roster_id'], $array['shift_id'], $array['day_order'], $array['created_at'], $array['updated_at']);
+        
+        return $array;
+    }
 }
