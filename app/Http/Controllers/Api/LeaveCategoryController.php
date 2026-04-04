@@ -60,6 +60,7 @@ class LeaveCategoryController extends Controller
             'daysPerYear' => ['required', 'integer', 'min:0', 'max:365'],
             'applicableRoles' => ['nullable', 'array'],
             'applicableRoles.*' => [Rule::in([
+                User::ROLE_ADMIN,
                 User::ROLE_EMPLOYEE,
                 User::ROLE_BRANCH_MANAGER,
                 User::ROLE_HR_MANAGER,
@@ -109,6 +110,7 @@ class LeaveCategoryController extends Controller
             'daysPerYear' => ['required', 'integer', 'min:0', 'max:365'],
             'applicableRoles' => ['nullable', 'array'],
             'applicableRoles.*' => [Rule::in([
+                User::ROLE_ADMIN,
                 User::ROLE_EMPLOYEE,
                 User::ROLE_BRANCH_MANAGER,
                 User::ROLE_HR_MANAGER,

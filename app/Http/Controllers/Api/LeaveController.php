@@ -7,36 +7,37 @@ use App\Models\Leave;
 use App\Models\LeaveCategory;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class LeaveController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
+        $authUser = $request->user();
         $query = Leave::with(['user.branch', 'leaveCategory', 'approver']);
 
-        // Role-based filtering
-        if ($user->role === User::ROLE_EMPLOYEE) {
-            // Employees can only see their own leaves
-            $query->where('user_id', $user->id);
-        } elseif ($user->role === User::ROLE_BRANCH_MANAGER) {
-            // Branch Managers see leaves from their branch
-            $query->whereHas('user', function ($q) use ($user) {
-                $q->where('branch_id', $user->branch_id);
+        if ($authUser->role === User::ROLE_EMPLOYEE) {
+            $query->where('user_id', $authUser->id);
+        } elseif ($authUser->role === User::ROLE_BRANCH_MANAGER) {
+            $query->where(function ($q) use ($authUser) {
+                $q->where('user_id', $authUser->id)
+                    ->orWhereHas('user', function ($subQuery) use ($authUser) {
+                        $subQuery->where('branch_id', $authUser->branch_id)
+                            ->where('role', User::ROLE_EMPLOYEE);
+                    });
             });
-        } elseif ($user->role === User::ROLE_HR_MANAGER) {
-            // HR Managers see employee leaves (not other HR/Branch Managers)
-            $query->whereHas('user', function ($q) {
-                $q->where('role', User::ROLE_EMPLOYEE);
+        } elseif ($authUser->role === User::ROLE_HR_MANAGER) {
+            $query->where(function ($q) use ($authUser) {
+                $q->where('user_id', $authUser->id)
+                    ->orWhereHas('user', function ($subQuery) {
+                        $subQuery->where('role', User::ROLE_EMPLOYEE);
+                    });
             });
         }
-        // Admin sees all leaves (no filter)
 
-        // Optional branch filter for Admin and HR Manager
         $branchId = $request->query('branchId');
-        if ($branchId && in_array($user->role, [User::ROLE_ADMIN, User::ROLE_HR_MANAGER])) {
+        if ($branchId && in_array($authUser->role, [User::ROLE_ADMIN, User::ROLE_HR_MANAGER], true)) {
             $query->whereHas('user', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId);
             });
@@ -53,8 +54,9 @@ class LeaveController extends Controller
 
     public function store(Request $request)
     {
+        $authUser = $request->user();
+
         $validated = $request->validate([
-            'userId' => ['required', 'exists:users,id'],
             'leaveCategoryId' => ['required', 'exists:leave_categories,id'],
             'durationType' => ['required', Rule::in([Leave::DURATION_FULL_DAY, Leave::DURATION_HALF_DAY])],
             'startDate' => ['required', 'date', 'after_or_equal:today'],
@@ -62,10 +64,8 @@ class LeaveController extends Controller
             'reason' => ['required', 'string', 'min:10', 'max:500'],
         ]);
 
-        $user = User::findOrFail($validated['userId']);
         $category = LeaveCategory::findOrFail($validated['leaveCategoryId']);
 
-        // Validate category is active
         if (!$category->is_active) {
             return response()->json([
                 'success' => false,
@@ -73,54 +73,47 @@ class LeaveController extends Controller
             ], 400);
         }
 
-        // Validate category is applicable for user's role
-        if (!$category->isApplicableForRole($user->role)) {
+        if (!$category->isApplicableForRole($authUser->role)) {
             return response()->json([
                 'success' => false,
                 'message' => 'This leave category is not applicable for your role',
             ], 400);
         }
 
-        // Validate category is applicable for user's branch
-        if (!$category->isApplicableForBranch($user->branch_id)) {
+        if (!$category->isApplicableForBranch($authUser->branch_id)) {
             return response()->json([
                 'success' => false,
                 'message' => 'This leave category is not applicable for your branch',
             ], 400);
         }
 
-        // Validate duration type
-        if ($category->leave_duration_type !== LeaveCategory::DURATION_BOTH && 
-            $category->leave_duration_type !== $validated['durationType']) {
+        if ($category->leave_duration_type !== LeaveCategory::DURATION_BOTH && $category->leave_duration_type !== $validated['durationType']) {
             return response()->json([
                 'success' => false,
                 'message' => 'This leave category only allows ' . $category->leave_duration_type,
             ], 400);
         }
 
-        // Calculate days count
         $startDate = new \DateTime($validated['startDate']);
         $endDate = new \DateTime($validated['endDate']);
         $daysDiff = $startDate->diff($endDate)->days + 1;
         $daysCount = $validated['durationType'] === Leave::DURATION_HALF_DAY ? $daysDiff * 0.5 : $daysDiff;
 
-        // Check leave balance for paid leaves
-        if ($category->is_paid && $user->leave_balance < $daysCount) {
+        if ($category->is_paid && $authUser->leave_balance < $daysCount) {
             return response()->json([
                 'success' => false,
-                'message' => 'Insufficient leave balance. Available: ' . $user->leave_balance . ' days, Requested: ' . $daysCount . ' days',
+                'message' => 'Insufficient leave balance. Available: ' . $authUser->leave_balance . ' days, Requested: ' . $daysCount . ' days',
             ], 400);
         }
 
-        // Check for overlapping leaves
-        $overlapping = Leave::where('user_id', $validated['userId'])
+        $overlapping = Leave::where('user_id', $authUser->id)
             ->where('status', '!=', Leave::STATUS_REJECTED)
             ->where(function ($query) use ($validated) {
                 $query->whereBetween('start_date', [$validated['startDate'], $validated['endDate']])
                     ->orWhereBetween('end_date', [$validated['startDate'], $validated['endDate']])
                     ->orWhere(function ($q) use ($validated) {
                         $q->where('start_date', '<=', $validated['startDate'])
-                          ->where('end_date', '>=', $validated['endDate']);
+                            ->where('end_date', '>=', $validated['endDate']);
                     });
             })
             ->exists();
@@ -133,7 +126,7 @@ class LeaveController extends Controller
         }
 
         $leave = Leave::create([
-            'user_id' => $validated['userId'],
+            'user_id' => $authUser->id,
             'leave_category_id' => $validated['leaveCategoryId'],
             'duration_type' => $validated['durationType'],
             'start_date' => $validated['startDate'],
@@ -150,8 +143,17 @@ class LeaveController extends Controller
         ], 201);
     }
 
-    public function show(Leave $leave)
+    public function show(Request $request, Leave $leave)
     {
+        $authUser = $request->user();
+
+        if (!$this->canViewLeave($authUser, $leave)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access',
+            ], 403);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Leave request fetched successfully',
@@ -161,22 +163,10 @@ class LeaveController extends Controller
 
     public function updateStatus(Request $request, Leave $leave)
     {
-        $user = $request->user();
-        
-        // Role-based authorization
-        $canApprove = false;
-        if ($user->role === User::ROLE_ADMIN) {
-            $canApprove = true;
-        } elseif ($user->role === User::ROLE_HR_MANAGER) {
-            // HR Manager can approve employee leaves
-            $canApprove = $leave->user->role === User::ROLE_EMPLOYEE;
-        } elseif ($user->role === User::ROLE_BRANCH_MANAGER) {
-            // Branch Manager can approve leaves from their branch (employees and HR managers)
-            $canApprove = $leave->user->branch_id === $user->branch_id && 
-                         in_array($leave->user->role, [User::ROLE_EMPLOYEE, User::ROLE_HR_MANAGER]);
-        }
+        $authUser = $request->user();
+        $leave->loadMissing('user', 'leaveCategory');
 
-        if (!$canApprove) {
+        if (!$this->canApproveLeave($authUser, $leave)) {
             return response()->json([
                 'success' => false,
                 'message' => 'You do not have permission to approve this leave request',
@@ -196,17 +186,27 @@ class LeaveController extends Controller
         }
 
         DB::beginTransaction();
+
         try {
+            $lockedUser = User::whereKey($leave->user_id)->lockForUpdate()->firstOrFail();
+
+            if ($validated['status'] === Leave::STATUS_APPROVED && $leave->leaveCategory->is_paid && $lockedUser->leave_balance < $leave->days_count) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Insufficient leave balance at approval time. Available: ' . $lockedUser->leave_balance . ' days, Requested: ' . $leave->days_count . ' days',
+                ], 400);
+            }
+
             $leave->update([
                 'status' => $validated['status'],
-                'approved_by' => $user->id,
+                'approved_by' => $authUser->id,
                 'rejection_reason' => $validated['rejectionReason'] ?? null,
             ]);
 
-            // Deduct leave balance for approved paid leaves
             if ($validated['status'] === Leave::STATUS_APPROVED && $leave->leaveCategory->is_paid) {
-                $leaveUser = $leave->user;
-                $leaveUser->decrement('leave_balance', $leave->days_count);
+                $lockedUser->decrement('leave_balance', $leave->days_count);
             }
 
             DB::commit();
@@ -218,20 +218,31 @@ class LeaveController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update leave request status',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
-    public function destroy(Leave $leave)
+    public function destroy(Request $request, Leave $leave)
     {
+        $authUser = $request->user();
+
         if ($leave->status !== Leave::STATUS_PENDING) {
             return response()->json([
                 'success' => false,
                 'message' => 'Only pending leave requests can be deleted',
             ], 400);
+        }
+
+        if ((int) $authUser->id !== (int) $leave->user_id && $authUser->role !== User::ROLE_ADMIN) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You can only delete your own pending leave requests',
+            ], 403);
         }
 
         $leave->delete();
@@ -244,9 +255,10 @@ class LeaveController extends Controller
 
     public function getEmployeeLeaves(Request $request, $userId)
     {
-        $user = $request->user();
+        $authUser = $request->user();
+        $targetUser = User::findOrFail($userId);
 
-        if ($user->role === User::ROLE_EMPLOYEE && $user->id != $userId) {
+        if (!$this->canViewUserLeaves($authUser, $targetUser)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access',
@@ -263,5 +275,54 @@ class LeaveController extends Controller
             'message' => 'Employee leave requests fetched successfully',
             'data' => $leaves,
         ]);
+    }
+
+    private function canViewLeave(User $authUser, Leave $leave): bool
+    {
+        $leave->loadMissing('user');
+        return $this->canViewUserLeaves($authUser, $leave->user);
+    }
+
+    private function canViewUserLeaves(User $authUser, User $targetUser): bool
+    {
+        if ($authUser->role === User::ROLE_ADMIN) {
+            return true;
+        }
+
+        if ((int) $authUser->id === (int) $targetUser->id) {
+            return true;
+        }
+
+        if ($authUser->role === User::ROLE_HR_MANAGER) {
+            return $targetUser->role === User::ROLE_EMPLOYEE;
+        }
+
+        if ($authUser->role === User::ROLE_BRANCH_MANAGER) {
+            return $targetUser->role === User::ROLE_EMPLOYEE && (int) $targetUser->branch_id === (int) $authUser->branch_id;
+        }
+
+        return false;
+    }
+
+    private function canApproveLeave(User $authUser, Leave $leave): bool
+    {
+        if ((int) $authUser->id === (int) $leave->user_id) {
+            return false;
+        }
+
+        if ($authUser->role === User::ROLE_ADMIN) {
+            return true;
+        }
+
+        if ($authUser->role === User::ROLE_HR_MANAGER) {
+            return $leave->user->role === User::ROLE_EMPLOYEE;
+        }
+
+        if ($authUser->role === User::ROLE_BRANCH_MANAGER) {
+            return $leave->user->role === User::ROLE_EMPLOYEE
+                && (int) $leave->user->branch_id === (int) $authUser->branch_id;
+        }
+
+        return false;
     }
 }

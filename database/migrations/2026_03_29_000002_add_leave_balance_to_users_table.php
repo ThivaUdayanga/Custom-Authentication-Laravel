@@ -9,14 +9,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->integer('leave_balance')->default(20)->after('date_of_joining');
+            $table->decimal('leave_balance', 5, 1)->default(20.0)->change();
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('leave_balance');
+            $table->integer('leave_balance')->default(20)->change();
         });
     }
 };

@@ -143,14 +143,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware(['auth:sanctum', 'role:Employee,HR Manager,Branch Manager'])->group(function () {
     Route::post('/leaves', [LeaveController::class, 'store']);
+    Route::delete('/leaves/{leave}', [LeaveController::class, 'destroy']);
 });
 
 Route::middleware(['auth:sanctum', 'role:Admin,HR Manager,Branch Manager'])->group(function () {
     Route::patch('/leaves/{leave}/status', [LeaveController::class, 'updateStatus']);
-});
-
-Route::middleware(['auth:sanctum', 'role:Employee,HR Manager'])->group(function () {
-    Route::delete('/leaves/{leave}', [LeaveController::class, 'destroy']);
 });
 
 /*
@@ -165,7 +162,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/leave-categories/{leaveCategory}', [LeaveCategoryController::class, 'show']);
 });
 
-Route::middleware(['auth:sanctum', 'role:Admin,Branch Manager'])->group(function () {
+Route::middleware(['auth:sanctum', 'role:Admin,HR Manager'])->group(function () {
     Route::post('/leave-categories', [LeaveCategoryController::class, 'store']);
     Route::put('/leave-categories/{leaveCategory}', [LeaveCategoryController::class, 'update']);
     Route::delete('/leave-categories/{leaveCategory}', [LeaveCategoryController::class, 'destroy']);
