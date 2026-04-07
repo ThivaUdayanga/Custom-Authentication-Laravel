@@ -117,16 +117,21 @@ Route::middleware(['auth:sanctum', 'role:Admin,HR Manager'])->group(function () 
 
 /*
 |--------------------------------------------------------------------------
-| Mark Attendance Routes
+| Attendance Routes
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth:sanctum', 'role:Admin,HR Manager,Branch Manager')->group(function () {
-    Route::get('/getAttendanceRecords', [AttendanceController::class, 'getAttendanceRecords']);
+// Employee attendance actions
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn']);
+    Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut']);
+    Route::get('/attendance/today', [AttendanceController::class, 'getTodayStatus']);
+    Route::get('/attendance/my-records', [AttendanceController::class, 'getAttendanceRecords']);
 });
 
-Route::middleware(['auth:sanctum', 'role:Branch Manager,HR Manager, Employee'])->group(function () {
-    Route::post('/mark-attendance', [AttendanceController::class, 'markAttendance']);
+// Manager/Admin attendance viewing
+Route::middleware(['auth:sanctum', 'role:Admin,HR Manager,Branch Manager'])->group(function () {
+    Route::get('/attendance/all-records', [AttendanceController::class, 'getAllAttendanceRecords']);
 });
 
 /*

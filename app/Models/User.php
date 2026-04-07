@@ -66,4 +66,19 @@ class User extends Authenticatable
     {
         return $this->hasMany(Leave::class, 'approved_by');
     }
+
+    public function toArray()
+    {
+        $array = parent::toArray();
+        
+        $array['branchId'] = $this->branch_id;
+        $array['employmentStatus'] = $this->employment_status;
+        $array['dateOfJoining'] = $this->date_of_joining?->format('Y-m-d');
+        $array['leaveBalance'] = $this->leave_balance;
+        
+        unset($array['branch_id'], $array['employment_status'], 
+              $array['date_of_joining'], $array['leave_balance']);
+        
+        return $array;
+    }
 }
